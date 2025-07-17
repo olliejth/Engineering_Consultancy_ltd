@@ -1,0 +1,7 @@
+pandas
+matplotlib
+pytest
+pylint
+altair
+requests
+dotenv

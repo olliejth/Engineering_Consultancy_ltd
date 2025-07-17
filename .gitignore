@@ -1,0 +1,10 @@
+.env
+*.env
+.venv
+*.venv
+
+*.xls
+*.csv
+*.xlsx
+*.json
+*.xml
