@@ -7,7 +7,6 @@
 #                 'issue_description', 'notes', 'due_date']
 
 from os import environ as ENV
-from matplotlib import pyplot as plt
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -117,19 +116,15 @@ def clean_combined(df: pd.DataFrame) -> pd.DataFrame:
     df.dropna(subset=['project_id', 'project_name', 'record_date',
                       'task_id', 'task_name'], inplace=True)
 
-    ['project_id', 'project_name', 'record_date', 'task_id', 'task_name',
-     'assigned_to', 'progress_percent', 'hours_logged', 'cost', 'budget_remaining',
-     'over_budget', 'issue_flag', 'issue_description', 'notes', 'due_date']
-
     # Replaces NaN values with more useful information
     # Replace NaN hours logged with zeros
     df['hours_logged'] = df['hours_logged'].fillna(0)
 
-    # Specify that no decription has been provided when an issue has been flagged
+    # Specify when an issue has been flagged but no description provided
     df.loc[
         (df['issue_flag'] == True) &
         (df['issue_description'].isna() |
-         (df['issue_description'].str.strip() == '')),
+         (df['issue_description'].str.strip().eq(''))),
         'issue_description'
     ] = 'Issue flagged but no description provided'
 
@@ -168,6 +163,6 @@ if __name__ == "__main__":
 
     my_df = main()
 
-    print(my_df.isna().sum())
+    print(my_df['issue_description'].value_counts())
 
     # print(type(my_df.iloc[12:13]['notes']))
