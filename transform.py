@@ -2,7 +2,12 @@
 
 # pylint: disable=W0621
 
+# NO_PROG_PERC = ['project_id', 'project_name', 'record_date', 'task_id', 'task_name',
+#                 'hours_logged', 'cost', 'budget_remaining', 'over_budget', 'issue_flag',
+#                 'issue_description', 'notes', 'due_date']
+
 from os import environ as ENV
+from matplotlib import pyplot as plt
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -13,10 +18,6 @@ load_dotenv()
 MASTER_COLUMNS = ['project_id', 'project_name', 'record_date', 'task_id', 'task_name',
                   'assigned_to', 'progress_percent', 'hours_logged', 'cost', 'budget_remaining',
                   'over_budget', 'issue_flag', 'issue_description', 'notes', 'due_date']
-
-NO_PROG_PERC = ['project_id', 'project_name', 'record_date', 'task_id', 'task_name',
-                'hours_logged', 'cost', 'budget_remaining', 'over_budget', 'issue_flag',
-                'issue_description', 'notes', 'due_date']
 
 
 def rename_columns(dataframes: list[pd.DataFrame]) -> list[pd.DataFrame]:
@@ -66,6 +67,21 @@ def clean_beta_df(df: pd.DataFrame) -> pd.DataFrame:
     df["over_budget"] = df["over_budget"].astype(bool)
     df["issue_flag"] = df["issue_flag"].astype(bool)
 
+    # Convert string dates into datetime
+    df["record_date"] = pd.to_datetime(
+        df["record_date"], format="%Y-%m-%d")
+    df["due_date"] = pd.to_datetime(
+        df["due_date"], format="%Y-%m-%d")
+
+    return df
+
+
+def clean_gamma_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Cleans data-set gamma"""
+
+    # Reformat ID to correct format
+    df['task_id'] = df['task_id'].apply(reformat_id)
+
     return df
 
 
@@ -76,8 +92,9 @@ def clean_individual_dfs(dataframes: list[pd.DataFrame]) -> list[pd.DataFrame]:
 
     clean_alpha = clean_alpha_df(alpha_df)
     clean_beta = clean_beta_df(beta_df)
+    clean_gamma = clean_gamma_df(gamma_df)
 
-    clean_dataframes = [clean_alpha, clean_beta, gamma_df]
+    clean_dataframes = [clean_alpha, clean_beta, clean_gamma]
 
     return clean_dataframes
 
@@ -96,34 +113,33 @@ def clean_combined(df: pd.DataFrame) -> pd.DataFrame:
     # Round and convert float hours into int
     df['hours_logged'] = df['hours_logged'].round().astype("Int64")
 
-    # Convert string dates into datetime objects
-    df["record_date"] = pd.to_datetime(
-        df["record_date"], format="%Y-%m-%d")
-    df["due_date"] = pd.to_datetime(
-        df["due_date"], format="%Y-%m-%d")
+    # Replaces NaN values with more useful information
 
     return df
 
 
-if __name__ == "__main__":
+def main() -> pd.DataFrame:
+    """Main transform and cleaning function"""
 
-    alpha_df = pd.read_csv(ENV["ALPHA_PATH"])
+    alpha_df = pd.read_csv(ENV["ALPHA_PATH"],
+                           parse_dates=['date_recorded', 'due_date'])
     beta_df = pd.read_json(ENV["BETA_PATH"])
-    gamma_df = pd.read_csv(ENV["GAMMA_PATH"])
+    gamma_df = pd.read_csv(ENV["GAMMA_PATH"],
+                           parse_dates=['record_date', 'due_date'])
 
     clean_dfs = clean_individual_dfs([alpha_df, beta_df, gamma_df])
     combined_df = combine_dfs(clean_dfs)
 
     comb_clean_df = clean_combined(combined_df)
 
-    my_df = comb_clean_df
+    return comb_clean_df
 
-    # COUNT = 1
-    # for col_name in NO_PROG_PERC:
 
-    #     print(f'\n{COUNT}) {col_name}\n')
-    #     print(my_df[col_name].head(n=2))
-    #     COUNT += 1
+if __name__ == "__main__":
 
-    # print('\n')
+    pd.set_option('display.max_columns', 50)
+
+    my_df = main()
     # print(my_df.info())
+
+    print(my_df.head())
