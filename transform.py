@@ -113,7 +113,34 @@ def clean_combined(df: pd.DataFrame) -> pd.DataFrame:
     # Round and convert float hours into int
     df['hours_logged'] = df['hours_logged'].round().astype("Int64")
 
+    # Removes rows without key info
+    df.dropna(subset=['project_id', 'project_name', 'record_date',
+                      'task_id', 'task_name'], inplace=True)
+
+    ['project_id', 'project_name', 'record_date', 'task_id', 'task_name',
+     'assigned_to', 'progress_percent', 'hours_logged', 'cost', 'budget_remaining',
+     'over_budget', 'issue_flag', 'issue_description', 'notes', 'due_date']
+
     # Replaces NaN values with more useful information
+    # Replace NaN hours logged with zeros
+    df['hours_logged'] = df['hours_logged'].fillna(0)
+
+    # Specify that no decription has been provided when an issue has been flagged
+    df.loc[
+        (df['issue_flag'] == True) &
+        (df['issue_description'].isna() |
+         (df['issue_description'].str.strip() == '')),
+        'issue_description'
+    ] = 'Issue flagged but no description provided'
+
+    # Replace empty descriptions with text
+    df.loc[(df['issue_flag'] == False), 'issue_description'] = 'No issue'
+
+    # Replace empty notes with text
+    df.loc[(df['notes'].isna()) |
+           (df['notes'].str.strip() == '') |
+           (df['notes'].str.strip() == 'NaN'),
+           'notes'] = 'No notes provided'
 
     return df
 
@@ -140,6 +167,7 @@ if __name__ == "__main__":
     pd.set_option('display.max_columns', 50)
 
     my_df = main()
-    # print(my_df.info())
 
-    print(my_df.head())
+    print(my_df.isna().sum())
+
+    # print(type(my_df.iloc[12:13]['notes']))
