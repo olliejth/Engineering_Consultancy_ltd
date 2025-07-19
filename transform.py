@@ -163,6 +163,4 @@ if __name__ == "__main__":
 
     my_df = main()
 
-    print(my_df['issue_description'].value_counts())
-
     # print(type(my_df.iloc[12:13]['notes']))

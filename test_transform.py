@@ -24,9 +24,7 @@ reformat_data = ([
     (100, "T00001"),
     (None, None),
     ('Psjbsd', 'P002'),
-    ('thfjk99', 'T00099')
-
-])
+    ('thfjk99', 'T00099')])
 
 
 @pytest.mark.parametrize("a, expected", reformat_data)
